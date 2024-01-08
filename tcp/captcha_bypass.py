@@ -4,13 +4,13 @@ from PIL import Image
 import pytesseract
 import base64
 import requests
-import sys
+import sys, time
 
 url  = "http://challenge01.root-me.org/programmation/ch8/"
 path = "/tmp/captcha.png"
 proxy =    {"http" :"http://127.0.0.1:8080"}
 headers = {"Content-Type": "application/x-www-form-urlencoded",
-            'Referer': 'http://challenge01.root-me.org/programmation/ch8/ch8.php?frame=1'}
+            'Referer': 'http://challenge01.root-me.org/programmation/ch8/'}
 cookies = {"PHPSESSID": ""}
 
 def sanitize(string):
@@ -21,8 +21,11 @@ def sanitize(string):
     return  (ret)
 
 def get_image(url):
-    response = urlopen(url)
-    page = response.read().decode()
+    #response = urlopen(url)
+    response = requests.get(url, cookies=cookies, proxies=proxy)
+    #print(response)
+    #page = response.read().decode()
+    page = response.text
     soup = BeautifulSoup(page, 'html.parser')
     img = soup.find_all("img", limit=1)[0]
     b64_image = img['src'].replace("data:image/png;base64,", '')
@@ -58,11 +61,13 @@ def hack():
     smooth_image(path)
     captcha_text = get_text_from_image(path)
     print(f"[{captcha_text}]")
-    response = requests.post(url, data=f"cametu={captcha_text}", headers=headers,cookies=cookies)#, proxies=proxy)
+    response = requests.post(url, data=f"cametu={captcha_text}", headers=headers,cookies=cookies, proxies=proxy)
     resp_soup = BeautifulSoup(response.text, "html.parser")
     message = resp_soup.find_all('p',limit=1)[0]
     print(message)
     
-hack()
+while True:
+    hack()
+    time.sleep(2)
 #sys.stderr.write(response.text)
 #print(response.text)
